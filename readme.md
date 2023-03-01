@@ -7,7 +7,11 @@ project goals are:
 - written in c
 - ease of use
 
-## The name
+## Tests running
+
+run `./test.sh`
+
+## About the name
 
 ### from wikipedia:
 
