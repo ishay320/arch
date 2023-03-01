@@ -1,8 +1,17 @@
-#include <iostream>
+#include <stdio.h>
 
-#define SUCCESS(prompt) std::cout << "\033[32m[V]\033[0m " << prompt << '\n'
+#define SUCCESS(prompt) printf("\033[32m[V]\033[0m %s\n", prompt)
 
-#define FAIL(prompt) std::cout << "\033[31m[X] " << __FILE__ << ':' << __LINE__ << "\033[0m\n\t" << prompt << '\n'
+#define FAIL(prompt) printf("\033[31m[X] %s:%d\033[0m\n\t%s\n", __FILE__, __LINE__, prompt)
+
+#define __FAIL_EXPLAIN_INT(prompt, first, second)                                                                                                    \
+    printf("\033[31m[X] %s:%d\n\t%d is not equals to %d\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
+
+#define __FAIL_EXPLAIN_CHAR(prompt, first, second)                                                                                                   \
+    printf("\033[31m[X] %s:%d\n\t%c is not equals to %c\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
+
+#define __FAIL_EXPLAIN_FLOAT(prompt, first, second)                                                                                                  \
+    printf("\033[31m[X] %s:%d\n\t%f is not equals to %f\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
 
 #define TEST(equals, prompt)                                                                                                                         \
     do                                                                                                                                               \
@@ -14,14 +23,40 @@
         }                                                                                                                                            \
     } while (0)
 
-#define TEST_EQ(a, b, prompt)                                                                                                                        \
+#define TEST_EQ_INT(a, b, prompt)                                                                                                                    \
     do                                                                                                                                               \
     {                                                                                                                                                \
-        const auto first  = a;                                                                                                                       \
-        const auto second = b;                                                                                                                       \
+        const int first  = a;                                                                                                                        \
+        const int second = b;                                                                                                                        \
         if (!(first == second))                                                                                                                      \
         {                                                                                                                                            \
-            FAIL("\033[31m" << first << " is not equals " << second << "\033[0m : " << prompt);                                                      \
+            __FAIL_EXPLAIN_INT(prompt, first, second);                                                                                               \
             return 1;                                                                                                                                \
         }                                                                                                                                            \
     } while (0)
+
+#define TEST_EQ_CHAR(a, b, prompt)                                                                                                                   \
+    do                                                                                                                                               \
+    {                                                                                                                                                \
+        const char first  = a;                                                                                                                       \
+        const char second = b;                                                                                                                       \
+        if (!(first == second))                                                                                                                      \
+        {                                                                                                                                            \
+            __FAIL_EXPLAIN_CHAR(prompt, first, second);                                                                                              \
+            return 1;                                                                                                                                \
+        }                                                                                                                                            \
+    } while (0)
+
+#define TEST_EQ_FLOAT(a, b, prompt)                                                                                                                  \
+    do                                                                                                                                               \
+    {                                                                                                                                                \
+        const float first  = a;                                                                                                                      \
+        const float second = b;                                                                                                                      \
+        if (!(first == second))                                                                                                                      \
+        {                                                                                                                                            \
+            __FAIL_EXPLAIN_FLOAT(prompt, first, second);                                                                                             \
+            return 1;                                                                                                                                \
+        }                                                                                                                                            \
+    } while (0)
+
+// TODO: macro that you pass int float... and it creates the macro automatically for TEST_EQ
