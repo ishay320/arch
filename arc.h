@@ -1,8 +1,6 @@
-#ifndef ARC_H
-#define ARC_H
 /*
 
-   Color representation is 0xRRGGBBAA
+   Color representation is uint32_t: 0xRRGGBBAA
 
    Usage:
    #define ARCH_IMPLEMENTATION
@@ -10,6 +8,8 @@
    ...
 
  */
+#ifndef ARCH_INCLUDE_H
+#define ARCH_INCLUDE_H
 
 #include <assert.h>
 #include <stdbool.h>
@@ -18,7 +18,14 @@
 
 #define UNUSED(x) (void)x
 #define POW(x) (x) * (x)
-#define ARCH_DEFINE_FUN
+
+#ifndef ARCH_DEF
+#ifdef ARCH_STATIC
+#define ARCH_DEF static
+#else
+#define ARCH_DEF extern
+#endif
+#endif
 
 typedef struct
 {
@@ -56,25 +63,28 @@ typedef union
 #define GET_B(hex) (color >> 8 * 1 & 0xFF)
 #define GET_A(hex) (color >> 8 * 0 & 0xFF)
 
-ARCH_DEFINE_FUN void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height);
-ARCH_DEFINE_FUN void arch_freeCanvas(arch_Canvas* canvas);
-ARCH_DEFINE_FUN void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1);
-ARCH_DEFINE_FUN void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w);
-ARCH_DEFINE_FUN void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius);
-ARCH_DEFINE_FUN void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1);
-ARCH_DEFINE_FUN void arch_fill(arch_Canvas* canvas, const uint32_t color);
+ARCH_DEF void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height);
+ARCH_DEF void arch_freeCanvas(arch_Canvas* canvas);
+ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1);
+ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w);
+ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius);
+ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1);
+ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color);
+
+#endif // ARCH_INCLUDE_H
 
 #ifdef ARCH_IMPLEMENTATION
-ARCH_DEFINE_FUN void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height)
+
+ARCH_DEF void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height)
 {
     canvas->data   = (unsigned char*)malloc(sizeof(unsigned char) * width * height * arch_COLOR_NUM);
     canvas->width  = width;
     canvas->height = height;
 }
 
-ARCH_DEFINE_FUN void arch_freeCanvas(arch_Canvas* canvas) { free(canvas->data); }
+ARCH_DEF void arch_freeCanvas(arch_Canvas* canvas) { free(canvas->data); }
 
-ARCH_DEFINE_FUN void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1)
+ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1)
 {
     UNUSED(canvas);
     UNUSED(x0);
@@ -84,7 +94,7 @@ ARCH_DEFINE_FUN void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t
     assert(false && "function not implemented yet");
 }
 
-ARCH_DEFINE_FUN void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w)
+ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w)
 {
 #ifdef ARCH_TYPE_PUNNING
     *(uint32_t*)&canvas->data[height * canvas->width * arch_COLOR_NUM + width] = color;
@@ -96,7 +106,7 @@ ARCH_DEFINE_FUN void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t 
 #endif
 }
 
-ARCH_DEFINE_FUN void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius)
+ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius)
 {
 
     const size_t start_h = y - radius;
@@ -118,7 +128,7 @@ ARCH_DEFINE_FUN void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, 
     }
 }
 
-ARCH_DEFINE_FUN void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1)
+ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1)
 {
     for (size_t height = 0; height < canvas->height; height++)
     {
@@ -139,7 +149,7 @@ ARCH_DEFINE_FUN void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t 
     }
 }
 
-ARCH_DEFINE_FUN void arch_fill(arch_Canvas* canvas, const uint32_t color)
+ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color)
 {
 
     for (size_t height = 0; height < canvas->height; height++)
@@ -153,6 +163,5 @@ ARCH_DEFINE_FUN void arch_fill(arch_Canvas* canvas, const uint32_t color)
 }
 
 #endif // ARCH_IMPLEMENTATION
-#endif // ARC_H
 
 // TODO: Implement function that receive x,y and width, height and returns safe zone
