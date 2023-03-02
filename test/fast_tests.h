@@ -60,3 +60,5 @@
     } while (0)
 
 // TODO: macro that you pass int float... and it creates the macro automatically for TEST_EQ
+// TODO: implement function that test speed
+// TODO: Implement function that compare file to array bit by bit
