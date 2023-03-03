@@ -1,8 +1,35 @@
+/* Usage:
+1.  you can create your own main and use the TEST_EQ etc.
+
+2.  if you want TEST_CASES then your main test file will look like:
+```
+#ifndef GLOBALS
+#define GLOBALS
+    // defines and includes put here
+#endif // GLOBALS
+
+#define TEST_PATH "path to the file"
+#include "fast_tests.h"
+
+#ifdef CASES
+TEST_CASE(test_name, {
+    // do tests
+})
+
+// more test cases
+#endif // CASES
+```
+ */
+
+#ifndef FAST_TESTS_H
+#define FAST_TESTS_H
+
 #include <stdio.h>
 
 #define SUCCESS(prompt) printf("\033[32m[V]\033[0m %s\n", prompt)
 
-#define FAIL(prompt) printf("\033[31m[X] %s:%d\033[0m\n\t%s\n", __FILE__, __LINE__, prompt)
+#define FAIL(prompt) printf("\033[31m[X] %s:%d\033[0m\n\t" prompt "\n", __FILE__, __LINE__)
+#define FAIL_V(prompt, ...) printf("\033[31m[X] %s:%d\033[0m\n\t" prompt "\n", __FILE__, __LINE__, __VA_ARGS__)
 
 #define __FAIL_EXPLAIN_INT(prompt, first, second)                                                                                                    \
     printf("\033[31m[X] %s:%d\n\t%d is not equals to %d\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
@@ -73,6 +100,57 @@
             return 1;                                                                                                                                \
         }                                                                                                                                            \
     } while (0)
+
+/*******************/
+/* TEST_CASES part */
+/*******************/
+
+#ifdef TEST_PATH
+#define TEST_CASE(name, ...)                                                                                                                         \
+    static int test_##name()                                                                                                                         \
+    {                                                                                                                                                \
+        __VA_ARGS__                                                                                                                                  \
+        SUCCESS("test " #name);                                                                                                                      \
+        return 0;                                                                                                                                    \
+    }
+#define CASES
+#include TEST_PATH
+#endif // TEST_PATH
+
+#undef TEST_CASE
+
+struct function_pair
+{
+    int (*fun)();
+    const char* name;
+};
+
+#ifdef TEST_PATH
+int main(void)
+{
+    struct function_pair tests[] = {
+#define ONLY_LIST_TESTS
+#define TEST_CASE(name, ...) {test_##name, #name},
+#include TEST_PATH
+    };
+    int num_tests = sizeof(tests) / sizeof(tests[0]);
+
+    for (int i = 0; i < num_tests; ++i)
+    {
+        /* stuff before test */
+        if ((tests[i].fun)() == 1)
+        {
+            FAIL_V("test %s failed", tests[i].name);
+        }
+        /* stuff after test */
+    }
+
+    return 0;
+}
+#undef CASES
+#endif // TEST_PATH
+
+#endif // FAST_TESTS_H
 
 // TODO: macro that you pass int float... and it creates the macro automatically for TEST_EQ
 // TODO: implement function that test speed

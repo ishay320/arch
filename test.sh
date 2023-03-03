@@ -4,7 +4,7 @@
 # ----------------------------------------------------------------
 set -e
 
-THIRD_PARTY_I=-I./third_party
+THIRD_PARTY_I=-I../third_party
 TEST_FOLDER="test"
 BUILD_FOLDER=build
 TESTS=(
@@ -15,15 +15,20 @@ WARNINGS="-Wall -Wextra -pedantic"
 CFLAGS=
 DEBUG=false
 
-mkdir -p ${BUILD_FOLDER}
-
 if [[ "${DEBUG}" == true ]]; then
     CFLAGS+=-ggdb
 fi
 
+if [ -z "${CC}" ]; then
+    CC="cc"
+fi
+
+cd ${TEST_FOLDER}
+mkdir -p ${BUILD_FOLDER}
+
 # compiling
 for FILE in "${TESTS[@]}"; do
-    cc ${CFLAGS} ${WARNINGS} ./${TEST_FOLDER}/"${FILE}" -o ./${BUILD_FOLDER}/"${FILE}".a ${THIRD_PARTY_I}
+    ${CC} ${CFLAGS} ${WARNINGS} "${FILE}" -o ./${BUILD_FOLDER}/"${FILE}".a ${THIRD_PARTY_I}
 done
 
 # running
