@@ -12,12 +12,13 @@ int main(void)
 {
     int x = 0;
     TEST_EQ_INT(1, ++x, "fine");
-    SUCCESS("all test ran successfully");
 
 #define WIDTH 128
 #define HEIGHT 128
     unsigned char data[WIDTH * HEIGHT * 4];
-    arch_Canvas canvas = {.data = data, .height = HEIGHT, .width = WIDTH};
+    unsigned char data2[WIDTH * HEIGHT * 4];
+    arch_Canvas canvas  = {.data = data, .height = HEIGHT, .width = WIDTH};
+    arch_Canvas canvas2 = {.data = data2, .height = HEIGHT, .width = WIDTH};
     // arch_createCanvasHeap(&canvas, 100, 100);
     arch_fill(&canvas, (uint32_t)0x00000000);
 
@@ -27,5 +28,13 @@ int main(void)
     stbi_write_png("test.png", canvas.width, canvas.height, arch_COLOR_NUM, canvas.data, 0);
     // arch_freeCanvas(&canvas);
 
+    writeBinaryImage("test.bin", &canvas);
+    readBinaryImage("test.bin", &canvas2);
+    for (size_t i = 0; i < WIDTH * HEIGHT * 4; i++)
+    {
+        TEST_EQ_UCHAR(canvas2.data[i], canvas.data[i], "colors wont match up");
+    }
+
+    SUCCESS("all test ran successfully");
     return 0;
 }

@@ -10,6 +10,9 @@
 #define __FAIL_EXPLAIN_CHAR(prompt, first, second)                                                                                                   \
     printf("\033[31m[X] %s:%d\n\t%c is not equals to %c\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
 
+#define __FAIL_EXPLAIN_UCHAR(prompt, first, second)                                                                                                  \
+    printf("\033[31m[X] %s:%d\n\t0x%X is not equals to 0x%X\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
+
 #define __FAIL_EXPLAIN_FLOAT(prompt, first, second)                                                                                                  \
     printf("\033[31m[X] %s:%d\n\t%f is not equals to %f\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)
 
@@ -43,6 +46,18 @@
         if (!(first == second))                                                                                                                      \
         {                                                                                                                                            \
             __FAIL_EXPLAIN_CHAR(prompt, first, second);                                                                                              \
+            return 1;                                                                                                                                \
+        }                                                                                                                                            \
+    } while (0)
+
+#define TEST_EQ_UCHAR(a, b, prompt)                                                                                                                  \
+    do                                                                                                                                               \
+    {                                                                                                                                                \
+        const unsigned char first  = a;                                                                                                              \
+        const unsigned char second = b;                                                                                                              \
+        if (!(first == second))                                                                                                                      \
+        {                                                                                                                                            \
+            __FAIL_EXPLAIN_UCHAR(prompt, first, second);                                                                                             \
             return 1;                                                                                                                                \
         }                                                                                                                                            \
     } while (0)

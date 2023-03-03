@@ -18,6 +18,7 @@
 
 #define UNUSED(x) (void)x
 #define POW(x) (x) * (x)
+typedef int err;
 
 #ifndef ARCH_DEF
 #ifdef ARCH_STATIC
@@ -70,6 +71,9 @@ ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size
 ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius);
 ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1);
 ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color);
+
+ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas);
+ARCH_DEF err readBinaryImage(const char* path, arch_Canvas* canvas);
 
 #endif // ARCH_INCLUDE_H
 
@@ -162,6 +166,44 @@ ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color)
     }
 }
 
+ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas)
+{
+    FILE* fp = fopen(path, "wb");
+    if (!fp)
+    {
+        perror("ERROR: fopen");
+        return EXIT_FAILURE;
+    }
+    size_t write = fwrite(canvas->data, 1, canvas->height * canvas->height * arch_COLOR_NUM, fp);
+    if (write != canvas->height * canvas->height * arch_COLOR_NUM)
+    {
+        perror("ERROR: fwrite");
+        fclose(fp);
+        return EXIT_FAILURE;
+    }
+
+    fclose(fp);
+    return EXIT_SUCCESS;
+}
+
+ARCH_DEF err readBinaryImage(const char* path, arch_Canvas* canvas)
+{
+    FILE* fp = fopen(path, "rb");
+    if (!fp)
+    {
+        perror("ERROR: fopen");
+        return EXIT_FAILURE;
+    }
+
+    size_t num = fread(canvas->data, 1, canvas->height * canvas->height * arch_COLOR_NUM, fp);
+    if (num != canvas->height * canvas->height * arch_COLOR_NUM)
+    {
+        perror("ERROR: fread");
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
 #endif // ARCH_IMPLEMENTATION
 
 // TODO: Implement function that receive x,y and width, height and returns safe zone
