@@ -2,7 +2,8 @@
 
 #define SUCCESS(prompt) printf("\033[32m[V]\033[0m %s\n", prompt)
 
-#define FAIL(prompt) printf("\033[31m[X] %s:%d\033[0m\n\t%s\n", __FILE__, __LINE__, prompt)
+#define FAIL(prompt) printf("\033[31m[X] %s:%d\033[0m\n\t" prompt "\n", __FILE__, __LINE__)
+#define FAIL_V(prompt, ...) printf("\033[31m[X] %s:%d\033[0m\n\t" prompt "\n", __FILE__, __LINE__, __VA_ARGS__)
 
 #define __FAIL_EXPLAIN_INT(prompt, first, second)                                                                                                    \
     printf("\033[31m[X] %s:%d\n\t%d is not equals to %d\033[0m : %s\n", __FILE__, __LINE__, first, second, prompt)

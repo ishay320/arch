@@ -12,9 +12,11 @@
 #define ARCH_INCLUDE_H
 
 #include <assert.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define UNUSED(x) (void)x
 #define POW(x) (x) * (x)
@@ -188,20 +190,23 @@ ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas)
 
 ARCH_DEF err readBinaryImage(const char* path, arch_Canvas* canvas)
 {
-    FILE* fp = fopen(path, "rb");
+    FILE* fp = fopen(path, "r");
     if (!fp)
     {
         perror("ERROR: fopen");
         return EXIT_FAILURE;
     }
 
-    size_t num = fread(canvas->data, 1, canvas->height * canvas->height * arch_COLOR_NUM, fp);
-    if (num != canvas->height * canvas->height * arch_COLOR_NUM)
+    const size_t len = canvas->height * canvas->height * arch_COLOR_NUM;
+    size_t num       = fread(canvas->data, 1, len, fp);
+    if (num != len)
     {
-        perror("ERROR: fread");
+        printf("ERROR: fraed read %ld instead of %ld: %s\n", num, len, strerror(errno));
+        fclose(fp);
         return EXIT_FAILURE;
     }
 
+    fclose(fp);
     return EXIT_SUCCESS;
 }
 #endif // ARCH_IMPLEMENTATION
