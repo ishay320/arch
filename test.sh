@@ -8,7 +8,7 @@ THIRD_PARTY_I=-I../third_party
 TEST_FOLDER="test"
 BUILD_FOLDER=build
 TESTS=(
-    new_test.c
+    main.c
 )
 
 WARNINGS="-Wall -Wextra -pedantic"
