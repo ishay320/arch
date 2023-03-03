@@ -11,13 +11,11 @@
 #define TEST_PATH "path to the file"
 #include "fast_tests.h"
 
-#ifdef CASES
 TEST_CASE(test_name, {
     // do tests
 })
 
 // more test cases
-#endif // CASES
 ```
  */
 
@@ -105,7 +103,6 @@ TEST_CASE(test_name, {
 /* TEST_CASES part */
 /*******************/
 
-#ifdef TEST_PATH
 #define TEST_CASE(name, ...)                                                                                                                         \
     static int test_##name()                                                                                                                         \
     {                                                                                                                                                \
@@ -113,13 +110,13 @@ TEST_CASE(test_name, {
         SUCCESS("test " #name);                                                                                                                      \
         return 0;                                                                                                                                    \
     }
-#define CASES
+
+// Test case functions definition
+#ifdef TEST_PATH
 #include TEST_PATH
 #endif // TEST_PATH
 
-#undef TEST_CASE
-
-struct function_pair
+struct ft_function_pair
 {
     int (*fun)();
     const char* name;
@@ -128,8 +125,10 @@ struct function_pair
 #ifdef TEST_PATH
 int main(void)
 {
-    struct function_pair tests[] = {
+    // Tests functions array
+    struct ft_function_pair tests[] = {
 #define ONLY_LIST_TESTS
+#undef TEST_CASE
 #define TEST_CASE(name, ...) {test_##name, #name},
 #include TEST_PATH
     };
@@ -147,7 +146,9 @@ int main(void)
 
     return 0;
 }
-#undef CASES
+
+#undef TEST_CASE
+#define TEST_CASE(...)
 #endif // TEST_PATH
 
 #endif // FAST_TESTS_H

@@ -12,13 +12,12 @@
 #define TEST_PATH "test.c"
 #include "fast_tests.h"
 
-#ifdef CASES
 TEST_CASE(circle, {
     unsigned char data[HEIGHT * WIDTH * arch_COLOR_NUM];
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
     UNUSED(canvas);
 
-    TEST_EQ_CHAR(12, 12, "error");
+    TEST_EQ_UCHAR(12, 12, "pass");
 })
 
 TEST_CASE(read_write, {
@@ -43,5 +42,3 @@ TEST_CASE(read_write, {
         TEST_EQ_UCHAR(canvas2.data[i], canvas.data[i], "colors wont match up");
     }
 })
-
-#endif // CASES
