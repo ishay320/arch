@@ -132,15 +132,19 @@ int main(void)
 #define TEST_CASE(name, ...) {test_##name, #name},
 #include TEST_PATH
     };
-    int num_tests = sizeof(tests) / sizeof(tests[0]);
+    int num_tests                = sizeof(tests) / sizeof(tests[0]);
+    static char* test_ok         = "OK";
+    static char* test_ok_color   = "\033[32m";
+    static char* test_fail       = "FAIL";
+    static char* test_fail_color = "\033[31m";
 
     for (int i = 0; i < num_tests; ++i)
     {
         /* stuff before test */
-        if ((tests[i].fun)() == 1)
-        {
-            FAIL_V("test %s failed", tests[i].name);
-        }
+        int err           = (tests[i].fun)();
+        char* test_status = (err == 1) ? test_fail : test_ok;
+        char* test_color  = (err == 1) ? test_fail_color : test_ok_color;
+        printf("TEST %d/%d %s %s[%s]\033[0m\n", i + 1, num_tests, tests[i].name, test_color, test_status);
         /* stuff after test */
     }
 
@@ -156,3 +160,4 @@ int main(void)
 // TODO: macro that you pass int float... and it creates the macro automatically for TEST_EQ
 // TODO: implement function that test speed
 // TODO: Implement function that compare file to array bit by bit
+// TODO: put the errors after the fail prompt
