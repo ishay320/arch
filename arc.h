@@ -1,6 +1,6 @@
 /*
 
-   Color representation is uint32_t: 0xRRGGBBAA
+   Color representation is uint32_t: 0xAABBGGRR
 
    Usage:
    #define ARCH_IMPLEMENTATION
@@ -33,7 +33,7 @@ typedef int err;
 
 typedef struct
 {
-    unsigned char* data;
+    uint32_t* data;
     size_t width;
     size_t height;
 } arch_Canvas;
@@ -47,12 +47,13 @@ enum
     arch_COLOR_NUM,
 };
 
+// 0xAABBGGRR
 #define ARCH_WHITE 0xFFFFFFFF
-#define ARCH_BLACK 0x000000FF
+#define ARCH_BLACK 0xFF000000
 #define ARCH_RED 0xFF0000FF
 #define ARCH_RED 0xFF0000FF
-#define ARCH_GREEN 0x00FF00FF
-#define ARCH_BLUE 0x0000FFFF
+#define ARCH_GREEN 0xFF00FF00
+#define ARCH_BLUE 0xFFFF0000
 
 #if 0
 typedef union
@@ -91,7 +92,7 @@ ARCH_DEF err readBinaryImage(const char* path, arch_Canvas* canvas);
 
 ARCH_DEF void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height)
 {
-    canvas->data   = (unsigned char*)malloc(sizeof(unsigned char) * width * height * arch_COLOR_NUM);
+    canvas->data   = (uint32_t*)malloc(sizeof(uint32_t) * width * height);
     canvas->width  = width;
     canvas->height = height;
 }
@@ -110,8 +111,9 @@ ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, si
 
 ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w)
 {
-#ifdef ARCH_TYPE_PUNNING
-    *(uint32_t*)&canvas->data[height * canvas->width * arch_COLOR_NUM + width] = color;
+// #ifdef ARCH_TYPE_PUNNING
+#if 1
+    canvas->data[h * canvas->width + w] = color;
 #else
     canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_RED]   = GET_R(color);
     canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_GREEN] = GET_G(color);
@@ -130,9 +132,9 @@ ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t 
 
     for (size_t height = start_h; height < end_h; height++)
     {
-        for (size_t width = start_w; width < end_w * arch_COLOR_NUM; width += arch_COLOR_NUM)
+        for (size_t width = start_w; width < end_w * arch_COLOR_NUM; width++)
         {
-            if (POW(x - height) + POW(y - width / 4) > POW(radius))
+            if (POW(x - height) + POW(y - width) > POW(radius))
             {
                 continue;
             }
@@ -151,9 +153,9 @@ ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, siz
             continue;
         }
 
-        for (size_t width = 0; width < canvas->width * arch_COLOR_NUM; width += arch_COLOR_NUM)
+        for (size_t width = 0; width < canvas->width; width++)
         {
-            if (width / 4 < x0 || x1 <= width / 4)
+            if (width < x0 || x1 <= width)
             {
                 continue;
             }
@@ -168,9 +170,8 @@ ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color)
 
     for (size_t height = 0; height < canvas->height; height++)
     {
-        for (size_t width = 0; width < canvas->width * arch_COLOR_NUM; width += arch_COLOR_NUM)
+        for (size_t width = 0; width < canvas->width; width++)
         {
-
             arch_fillPixel(canvas, color, height, width);
         }
     }
@@ -184,8 +185,8 @@ ARCH_DEF err arch_writeBinaryImage(const char* path, const arch_Canvas* canvas)
         perror("ERROR: fopen");
         return EXIT_FAILURE;
     }
-    size_t write = fwrite(canvas->data, 1, canvas->height * canvas->height * arch_COLOR_NUM, fp);
-    if (write != canvas->height * canvas->height * arch_COLOR_NUM)
+    size_t write = fwrite(canvas->data, 1, canvas->height * canvas->height * sizeof(size_t), fp);
+    if (write != canvas->height * canvas->height * sizeof(size_t))
     {
         perror("ERROR: fwrite");
         fclose(fp);
@@ -205,7 +206,7 @@ ARCH_DEF err arch_readBinaryImage(const char* path, arch_Canvas* canvas)
         return EXIT_FAILURE;
     }
 
-    const size_t len = canvas->height * canvas->height * arch_COLOR_NUM;
+    const size_t len = canvas->height * canvas->height * sizeof(size_t);
     size_t num       = fread(canvas->data, 1, len, fp);
     if (num != len)
     {

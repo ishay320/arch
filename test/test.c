@@ -24,14 +24,26 @@ typedef enum
 TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write);
 int GetStatusStr(TestStatus status, char** test_status, char** test_color);
 
+int test_fill(char read_write)
+{
+    uint32_t data[sizeof(uint32_t) * HEIGHT * WIDTH];
+    arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
+    arch_fill(&canvas, ARCH_RED);
+
+    uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
+    arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
+
+    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("fill"), read_write);
+}
+
 int test_circle(char read_write)
 {
-    unsigned char data[HEIGHT * WIDTH * arch_COLOR_NUM];
+    uint32_t data[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
     arch_fill(&canvas, ARCH_RED);
     arch_circle(&canvas, ARCH_BLUE, canvas.width / 2, canvas.height / 2, 10);
 
-    unsigned char data_compare[HEIGHT * WIDTH * arch_COLOR_NUM];
+    uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
 
     return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("circle"), read_write);
@@ -39,12 +51,12 @@ int test_circle(char read_write)
 
 int test_rectangle(char read_write)
 {
-    unsigned char data[HEIGHT * WIDTH * arch_COLOR_NUM];
+    uint32_t data[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
     arch_fill(&canvas, ARCH_RED);
     arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4, 3 * canvas.height / 4);
 
-    unsigned char data_compare[HEIGHT * WIDTH * arch_COLOR_NUM];
+    uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
 
     return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("rectangle"), read_write);
@@ -57,7 +69,7 @@ struct function_pair
 };
 
 // Fill it with new tests
-struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}};
+struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}, {test_fill, "fill"}};
 
 int main(int argc, char const* argv[])
 {
@@ -131,11 +143,17 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canv
     {
         case 'r':
         {
-            canvas_b->data = stbi_load(file_path, (int*)&canvas_b->width, (int*)&canvas_b->height, 0, 4);
+            canvas_b->data = (uint32_t*)stbi_load(file_path, (int*)&canvas_b->width, (int*)&canvas_b->height, 0, 4);
 
             if (canvas_b->data == 0)
             {
                 printf("ERROR: read file \"%s\": %s\n", file_path, strerror(errno));
+                return TEST_FAIL;
+            }
+
+            if (canvas_b->width != canvas_a->width || canvas_b->height != canvas_a->height)
+            {
+                printf("ERROR: sizes wont match up\n");
                 return TEST_FAIL;
             }
         }
@@ -157,11 +175,11 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canv
             break;
     }
 
-    for (size_t i = 0; i < HEIGHT * WIDTH * arch_COLOR_NUM; i++)
+    for (size_t i = 0; i < HEIGHT * WIDTH; i++)
     {
         if (canvas_a->data[i] != canvas_b->data[i])
         {
-            printf("ERROR: %d and %d in pos %ld won`t match up\n", canvas_a->data[i], canvas_b->data[i], i);
+            printf("ERROR: 0x%08X and 0x%08X in pos %ld won`t match up\n", canvas_a->data[i], canvas_b->data[i], i);
             return TEST_FAIL;
         }
     }
