@@ -6,7 +6,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define TEST_FILE_PATH "./tests_bin/"
+#define TEST_FILE_PATH "./tests_compare/"
 #define TEST_FILE_POSTFIX ".png"
 #define CREATE_TEST_OUTPUT(name) TEST_FILE_PATH name TEST_FILE_POSTFIX
 
@@ -23,6 +23,7 @@ typedef enum
 
 TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write);
 int GetStatusStr(TestStatus status, char** test_status, char** test_color);
+
 int test_circle(char read_write)
 {
     unsigned char data[HEIGHT * WIDTH * arch_COLOR_NUM];
@@ -36,6 +37,19 @@ int test_circle(char read_write)
     return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("circle"), read_write);
 }
 
+int test_rectangle(char read_write)
+{
+    unsigned char data[HEIGHT * WIDTH * arch_COLOR_NUM];
+    arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
+    arch_fill(&canvas, ARCH_RED);
+    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4, 3 * canvas.height / 4);
+
+    unsigned char data_compare[HEIGHT * WIDTH * arch_COLOR_NUM];
+    arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
+
+    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("rectangle"), read_write);
+}
+
 struct function_pair
 {
     int (*fun)(char);
@@ -43,7 +57,7 @@ struct function_pair
 };
 
 // Fill it with new tests
-struct function_pair tests[] = {{test_circle, "circle"}};
+struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}};
 
 int main(int argc, char const* argv[])
 {
