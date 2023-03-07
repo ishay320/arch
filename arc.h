@@ -47,6 +47,13 @@ enum
     arch_COLOR_NUM,
 };
 
+#define ARCH_WHITE 0xFFFFFFFF
+#define ARCH_BLACK 0x000000FF
+#define ARCH_RED 0xFF0000FF
+#define ARCH_RED 0xFF0000FF
+#define ARCH_GREEN 0x00FF00FF
+#define ARCH_BLUE 0x0000FFFF
+
 #if 0
 typedef union
 {
@@ -169,7 +176,7 @@ ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color)
     }
 }
 
-ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas)
+ARCH_DEF err arch_writeBinaryImage(const char* path, const arch_Canvas* canvas)
 {
     FILE* fp = fopen(path, "wb");
     if (!fp)
@@ -189,7 +196,7 @@ ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas)
     return EXIT_SUCCESS;
 }
 
-ARCH_DEF err readBinaryImage(const char* path, arch_Canvas* canvas)
+ARCH_DEF err arch_readBinaryImage(const char* path, arch_Canvas* canvas)
 {
     FILE* fp = fopen(path, "r");
     if (!fp)
