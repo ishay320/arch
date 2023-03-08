@@ -17,10 +17,12 @@ typedef enum
 {
     TEST_PASS = 0,
     TEST_FAIL,
+    TEST_ERROR,
     TEST_WRITTEN,
     TEST_STATUS_NUM
 } TestStatus;
 
+TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canvas_b);
 TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write);
 int GetStatusStr(TestStatus status, char** test_status, char** test_color);
 
@@ -62,6 +64,36 @@ int test_rectangle(char read_write)
     return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("rectangle"), read_write);
 }
 
+int test_readWriteBin(char read_write)
+{
+    UNUSED(read_write);
+
+    uint32_t data[sizeof(uint32_t) * HEIGHT * WIDTH];
+    arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
+
+    arch_fill(&canvas, ARCH_RED);
+    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4, 3 * canvas.height / 4);
+    arch_circle(&canvas, ARCH_BLUE, canvas.width / 2, canvas.height / 2, 10);
+
+    uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
+    arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
+
+    const char* file_name = TEST_FILE_PATH "read_write.bin";
+    if (arch_writeBinaryImage(file_name, &canvas) == EXIT_FAILURE)
+    {
+        printf("ERROR: could not write \"%s\":%s\n", file_name, strerror(errno));
+        return TEST_ERROR;
+    }
+
+    if (arch_readBinaryImage(file_name, &canvas_compare) == EXIT_FAILURE)
+    {
+        printf("ERROR: could not read \"%s\":%s\n", file_name, strerror(errno));
+        return TEST_ERROR;
+    }
+
+    return compareCanvases(&canvas, &canvas_compare);
+}
+
 struct function_pair
 {
     int (*fun)(char);
@@ -69,7 +101,7 @@ struct function_pair
 };
 
 // Fill it with new tests
-struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}, {test_fill, "fill"}};
+struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}, {test_fill, "fill"}, {test_readWriteBin, "readWriteBin"}};
 
 int main(int argc, char const* argv[])
 {
@@ -104,10 +136,12 @@ int GetStatusStr(TestStatus status, char** test_status, char** test_color)
     static char* test_ok_color      = "\033[32m";
     static char* test_fail          = "FAIL";
     static char* test_fail_color    = "\033[31m";
+    static char* test_error         = "ERROR";
+    static char* test_error_color   = "\033[34m";
     static char* test_written       = "WRITTEN";
     static char* test_written_color = "\033[33m";
 
-    static_assert(TEST_STATUS_NUM == 3, "ERROR: TestStatus was not updated, add case for the new test option\n");
+    static_assert(TEST_STATUS_NUM == 4, "ERROR: TestStatus was not updated, add case for the new test option\n");
     switch (status)
     {
         case TEST_PASS:
@@ -120,6 +154,12 @@ int GetStatusStr(TestStatus status, char** test_status, char** test_color)
         {
             *test_status = test_fail;
             *test_color  = test_fail_color;
+        }
+        break;
+        case TEST_ERROR:
+        {
+            *test_status = test_error;
+            *test_color  = test_error_color;
         }
         break;
         case TEST_WRITTEN:
@@ -135,6 +175,31 @@ int GetStatusStr(TestStatus status, char** test_status, char** test_color)
             break;
     }
     return 0;
+}
+
+TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canvas_b)
+{
+
+    if (canvas_a->height != canvas_b->height)
+    {
+        printf("ERROR: canvases height wont match: %ld != %ld\n", canvas_a->height, canvas_b->height);
+        return TEST_FAIL;
+    }
+    if (canvas_a->width != canvas_b->width)
+    {
+        printf("ERROR: canvases width wont match: %ld != %ld\n", canvas_a->width, canvas_b->width);
+        return TEST_FAIL;
+    }
+
+    for (size_t i = 0; i < HEIGHT * WIDTH; i++)
+    {
+        if (canvas_a->data[i] != canvas_b->data[i])
+        {
+            printf("ERROR: 0x%08X and 0x%08X in pos %ld won`t match up\n", canvas_a->data[i], canvas_b->data[i], i);
+            return TEST_FAIL;
+        }
+    }
+    return TEST_PASS;
 }
 
 TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write)
@@ -175,15 +240,8 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canv
             break;
     }
 
-    for (size_t i = 0; i < HEIGHT * WIDTH; i++)
-    {
-        if (canvas_a->data[i] != canvas_b->data[i])
-        {
-            printf("ERROR: 0x%08X and 0x%08X in pos %ld won`t match up\n", canvas_a->data[i], canvas_b->data[i], i);
-            return TEST_FAIL;
-        }
-    }
+    TestStatus ret = compareCanvases(canvas_a, canvas_b);
 
     STBI_FREE(canvas_b->data);
-    return TEST_PASS;
+    return ret;
 }
