@@ -80,7 +80,8 @@ ARCH_DEF void arch_freeCanvas(arch_Canvas* canvas);
 ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1);
 ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w);
 ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius);
-ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1);
+ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1,
+                             size_t y1);
 ARCH_DEF void arch_fill(arch_Canvas* canvas, const uint32_t color);
 
 ARCH_DEF err writeBinaryImage(const char* path, const arch_Canvas* canvas);
@@ -111,15 +112,7 @@ ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, si
 
 ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w)
 {
-// #ifdef ARCH_TYPE_PUNNING
-#if 1
     canvas->data[h * canvas->width + w] = color;
-#else
-    canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_RED]   = GET_R(color);
-    canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_GREEN] = GET_G(color);
-    canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_BLUE]  = GET_B(color);
-    canvas->data[h * canvas->width * arch_COLOR_NUM + w + arch_ALFA]  = GET_A(color);
-#endif
 }
 
 ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius)
@@ -144,7 +137,8 @@ ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t 
     }
 }
 
-ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1, size_t y1)
+ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1,
+                             size_t y1)
 {
     for (size_t height = 0; height < canvas->height; height++)
     {

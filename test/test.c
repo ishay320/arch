@@ -23,7 +23,8 @@ typedef enum
 } TestStatus;
 
 TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canvas_b);
-TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write);
+TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b,
+                                  const char* file_path, char read_write);
 int GetStatusStr(TestStatus status, char** test_status, char** test_color);
 
 int test_fill(char read_write)
@@ -48,7 +49,8 @@ int test_circle(char read_write)
     uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
 
-    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("circle"), read_write);
+    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("circle"),
+                                  read_write);
 }
 
 int test_rectangle(char read_write)
@@ -56,12 +58,14 @@ int test_rectangle(char read_write)
     uint32_t data[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
     arch_fill(&canvas, ARCH_RED);
-    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4, 3 * canvas.height / 4);
+    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4,
+                   3 * canvas.height / 4);
 
     uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
     arch_Canvas canvas_compare = {.data = data_compare, .width = WIDTH, .height = HEIGHT};
 
-    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("rectangle"), read_write);
+    return readWriteCompareCanvas(&canvas, &canvas_compare, CREATE_TEST_OUTPUT("rectangle"),
+                                  read_write);
 }
 
 int test_readWriteBin(char read_write)
@@ -72,7 +76,8 @@ int test_readWriteBin(char read_write)
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
 
     arch_fill(&canvas, ARCH_RED);
-    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4, 3 * canvas.height / 4);
+    arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4,
+                   3 * canvas.height / 4);
     arch_circle(&canvas, ARCH_BLUE, canvas.width / 2, canvas.height / 2, 10);
 
     uint32_t data_compare[sizeof(uint32_t) * HEIGHT * WIDTH];
@@ -101,7 +106,10 @@ struct function_pair
 };
 
 // Fill it with new tests
-struct function_pair tests[] = {{test_circle, "circle"}, {test_rectangle, "rectangle"}, {test_fill, "fill"}, {test_readWriteBin, "readWriteBin"}};
+struct function_pair tests[] = {{test_circle, "circle"},
+                                {test_rectangle, "rectangle"},
+                                {test_fill, "fill"},
+                                {test_readWriteBin, "readWriteBin"}};
 
 int main(int argc, char const* argv[])
 {
@@ -124,7 +132,8 @@ int main(int argc, char const* argv[])
             return 1;
         }
 
-        printf("TEST %ld/%ld %s %s[%s]\033[0m\n", i + 1, num_tests, tests[i].name, test_color, test_status);
+        printf("TEST %ld/%ld %s %s[%s]\033[0m\n", i + 1, num_tests, tests[i].name, test_color,
+               test_status);
     }
 
     return 0;
@@ -141,7 +150,8 @@ int GetStatusStr(TestStatus status, char** test_status, char** test_color)
     static char* test_written       = "WRITTEN";
     static char* test_written_color = "\033[33m";
 
-    static_assert(TEST_STATUS_NUM == 4, "ERROR: TestStatus was not updated, add case for the new test option\n");
+    static_assert(TEST_STATUS_NUM == 4,
+                  "ERROR: TestStatus was not updated, add case for the new test option\n");
     switch (status)
     {
         case TEST_PASS:
@@ -182,7 +192,8 @@ TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canva
 
     if (canvas_a->height != canvas_b->height)
     {
-        printf("ERROR: canvases height wont match: %ld != %ld\n", canvas_a->height, canvas_b->height);
+        printf("ERROR: canvases height wont match: %ld != %ld\n", canvas_a->height,
+               canvas_b->height);
         return TEST_FAIL;
     }
     if (canvas_a->width != canvas_b->width)
@@ -195,20 +206,23 @@ TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canva
     {
         if (canvas_a->data[i] != canvas_b->data[i])
         {
-            printf("ERROR: 0x%08X and 0x%08X in pos %ld won`t match up\n", canvas_a->data[i], canvas_b->data[i], i);
+            printf("ERROR: 0x%08X and 0x%08X in pos %ld won`t match up\n", canvas_a->data[i],
+                   canvas_b->data[i], i);
             return TEST_FAIL;
         }
     }
     return TEST_PASS;
 }
 
-TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b, const char* file_path, char read_write)
+TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canvas_b,
+                                  const char* file_path, char read_write)
 {
     switch (read_write)
     {
         case 'r':
         {
-            canvas_b->data = (uint32_t*)stbi_load(file_path, (int*)&canvas_b->width, (int*)&canvas_b->height, 0, 4);
+            canvas_b->data = (uint32_t*)stbi_load(file_path, (int*)&canvas_b->width,
+                                                  (int*)&canvas_b->height, 0, 4);
 
             if (canvas_b->data == 0)
             {
@@ -225,7 +239,8 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canv
         break;
         case 'w':
         {
-            if (stbi_write_png(file_path, canvas_a->width, canvas_a->height, 4, canvas_a->data, 0) == 0)
+            if (stbi_write_png(file_path, canvas_a->width, canvas_a->height, 4, canvas_a->data,
+                               0) == 0)
             {
                 printf("ERROR: write file failed: %s\n", strerror(errno));
                 return TEST_FAIL;
@@ -245,3 +260,6 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, arch_Canvas* canv
     STBI_FREE(canvas_b->data);
     return ret;
 }
+
+// TODO: write the compare images as expected and got if failed
+// TODO: add difference mode that show the different pixels
