@@ -76,8 +76,8 @@ typedef union
 #define GET_A(hex) (color >> 8 * 0 & 0xFF)
 
 ARCH_DEF void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t height);
-ARCH_DEF void arch_freeCanvas(arch_Canvas* canvas);
-ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1);
+ARCH_DEF void arch_freeCanvasHeap(arch_Canvas* canvas);
+ARCH_DEF void arch_line(arch_Canvas* canvas, uint32_t color, int x0, int y0, int x1, int y1);
 ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w);
 ARCH_DEF void arch_circle(arch_Canvas* canvas, uint32_t color, size_t x, size_t y, float radius);
 ARCH_DEF void arch_rectangle(arch_Canvas* canvas, uint32_t color, size_t x0, size_t y0, size_t x1,
@@ -98,16 +98,16 @@ ARCH_DEF void arch_createCanvasHeap(arch_Canvas* canvas, size_t width, size_t he
     canvas->height = height;
 }
 
-ARCH_DEF void arch_freeCanvas(arch_Canvas* canvas) { free(canvas->data); }
+ARCH_DEF void arch_freeCanvasHeap(arch_Canvas* canvas) { free(canvas->data); }
 
-ARCH_DEF void arch_line(arch_Canvas* canvas, size_t x0, size_t y0, size_t x1, size_t y1)
+ARCH_DEF
+void arch_line(arch_Canvas* canvas, uint32_t color, int x0, int y0, int x1, int y1)
 {
-    UNUSED(canvas);
-    UNUSED(x0);
-    UNUSED(y0);
-    UNUSED(x1);
-    UNUSED(y1);
-    assert(false && "function not implemented yet");
+
+#if 1
+    arch_fillPixel(canvas, ARCH_GREEN, y0, x0);
+    arch_fillPixel(canvas, ARCH_GREEN, y1, x1);
+#endif
 }
 
 ARCH_DEF void arch_fillPixel(arch_Canvas* canvas, uint32_t color, size_t h, size_t w)
