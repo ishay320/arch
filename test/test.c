@@ -10,7 +10,17 @@
 
 #define TEST_FILE_PATH "./tests_compare/"
 #define TEST_FILE_POSTFIX ".png"
-#define CREATE_TEST_OUTPUT(name) TEST_FILE_PATH name TEST_FILE_POSTFIX
+#define CREATE_TEST_FILENAME(name)                                                                 \
+    {                                                                                              \
+        .path = TEST_FILE_PATH, .filename = name, .postfix = TEST_FILE_POSTFIX                     \
+    }
+
+typedef struct
+{
+    char* path;
+    char* filename;
+    char* postfix;
+} Filename;
 
 #define HEIGHT 64
 #define WIDTH 64
@@ -25,7 +35,7 @@ typedef enum
 } TestStatus;
 
 TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canvas_b);
-TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const char* file_path,
+TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const Filename file_path,
                                   char read_write);
 int GetStatusStr(TestStatus status, char** test_status, char** test_color);
 
@@ -49,7 +59,7 @@ int test_line(char read_write)
         arch_line(&canvas, ARCH_BLUE, middle_x, middle_y, x, y);
     }
 
-    return readWriteCompareCanvas(&canvas, CREATE_TEST_OUTPUT("line"), read_write);
+    return readWriteCompareCanvas(&canvas, (Filename)CREATE_TEST_FILENAME("line"), read_write);
 }
 
 int test_fill(char read_write)
@@ -58,7 +68,7 @@ int test_fill(char read_write)
     arch_Canvas canvas = {.data = data, .width = WIDTH, .height = HEIGHT};
     arch_fill(&canvas, ARCH_RED);
 
-    return readWriteCompareCanvas(&canvas, CREATE_TEST_OUTPUT("fill"), read_write);
+    return readWriteCompareCanvas(&canvas, (Filename)CREATE_TEST_FILENAME("fill"), read_write);
 }
 
 int test_circle(char read_write)
@@ -68,7 +78,7 @@ int test_circle(char read_write)
     arch_fill(&canvas, ARCH_RED);
     arch_circle(&canvas, ARCH_BLUE, canvas.width / 2, canvas.height / 2, 10);
 
-    return readWriteCompareCanvas(&canvas, CREATE_TEST_OUTPUT("circle"), read_write);
+    return readWriteCompareCanvas(&canvas, (Filename)CREATE_TEST_FILENAME("circle"), read_write);
 }
 
 int test_rectangle(char read_write)
@@ -79,7 +89,7 @@ int test_rectangle(char read_write)
     arch_rectangle(&canvas, ARCH_WHITE, canvas.width / 4, canvas.height / 4, 3 * canvas.width / 4,
                    3 * canvas.height / 4);
 
-    return readWriteCompareCanvas(&canvas, CREATE_TEST_OUTPUT("rectangle"), read_write);
+    return readWriteCompareCanvas(&canvas, (Filename)CREATE_TEST_FILENAME("rectangle"), read_write);
 }
 
 int test_readWriteBin(char read_write)
@@ -229,10 +239,15 @@ TestStatus compareCanvases(const arch_Canvas* canvas_a, const arch_Canvas* canva
     return TEST_PASS;
 }
 
-TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const char* file_path,
+TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const Filename filename,
                                   char read_write)
 {
     arch_Canvas canvas_b = {0};
+    char path[64];
+    strcpy(path, filename.path);
+    strcat(path, filename.filename);
+    strcat(path, filename.postfix);
+
     switch (read_write)
     {
         case 'r':
@@ -241,13 +256,13 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const char* file_
             int height;
             int comp;
 
-            canvas_b.data   = (uint32_t*)stbi_load(file_path, &width, &height, &comp, 4);
+            canvas_b.data   = (uint32_t*)stbi_load(path, &width, &height, &comp, 4);
             canvas_b.width  = width;
             canvas_b.height = height;
 
             if (canvas_b.data == 0)
             {
-                printf("ERROR: read file \"%s\": %s\n", file_path, strerror(errno));
+                printf("ERROR: read file \"%s\": %s\n", path, strerror(errno));
                 return TEST_FAIL;
             }
 
@@ -260,11 +275,10 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const char* file_
         break;
         case 'w':
         {
-            if (stbi_write_png(file_path, canvas_a->width, canvas_a->height, 4, canvas_a->data,
-                               0) == 0)
+            if (stbi_write_png(path, canvas_a->width, canvas_a->height, 4, canvas_a->data, 0) == 0)
             {
                 printf("ERROR: write file failed: %s\n", strerror(errno));
-                return TEST_FAIL;
+                return TEST_ERROR;
             }
             return TEST_WRITTEN;
         }
@@ -277,10 +291,25 @@ TestStatus readWriteCompareCanvas(const arch_Canvas* canvas_a, const char* file_
     }
 
     TestStatus ret = compareCanvases(canvas_a, &canvas_b);
+    if (ret == TEST_FAIL)
+    {
+        char expected_filename[64];
+        strcpy(expected_filename, filename.path);
+        strcat(expected_filename, "got_");
+        strcat(expected_filename, filename.filename);
+        strcat(expected_filename, filename.postfix);
+
+        if (stbi_write_png(expected_filename, canvas_a->width, canvas_a->height, 4, canvas_a->data,
+                           0) == 0)
+        {
+            printf("ERROR: write comparison file failed: %s\n", strerror(errno));
+            return TEST_ERROR;
+        }
+        printf("output is different: \noriginal:'%s' \ngot:'%s'\n", path, expected_filename);
+    }
 
     STBI_FREE(canvas_b.data);
     return ret;
 }
 
-// TODO: write the compare images as expected and got if failed
 // TODO: add difference mode that show the different pixels
